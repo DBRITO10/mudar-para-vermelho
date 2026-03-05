@@ -8,6 +8,7 @@
     <style>
     :root {
         --primary: #d32f2f;      /* Vermelho destaque */
+        --neutral-dark: #212121; /* PRETO para botões de ação e voltar */
         --bg-body: #f5f5f5;     /* Cinza claro */
         --bg-card: #ffffff;     /* Branco */
         --text-dark: #333333;   /* Texto escuro */
@@ -22,7 +23,7 @@
         color: var(--text-dark);
     }
 
-    /* Barra Superior Padronizada */
+    /* Barra Superior */
     .top-nav {
         background: var(--bg-card);
         padding: 15px 20px;
@@ -33,15 +34,14 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
-    .user-badge {
-        background: #eee;
-        padding: 8px 15px;
-        border-radius: 20px;
-        color: var(--text-dark);
+    /* BOTÃO VOLTAR PRETO */
+    .btn-voltar {
+        color: var(--neutral-dark);
+        text-decoration: none;
+        font-weight: bold;
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-size: 0.9rem;
+        gap: 5px;
     }
 
     .btn-logout {
@@ -54,13 +54,9 @@
         font-weight: bold;
     }
 
-    .container {
-        max-width: 1100px;
-        margin: 30px auto;
-        padding: 0 20px;
-    }
+    .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
 
-    /* Painéis Limpos */
+    /* Painéis */
     .glass-panel {
         background: var(--bg-card);
         border: 1px solid var(--border);
@@ -72,24 +68,10 @@
 
     h2 { color: var(--primary); margin-top: 0; display: flex; align-items: center; gap: 10px; }
 
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .field-group { display: flex; flex-direction: column; gap: 5px; }
     .field-group label { font-size: 0.75rem; font-weight: bold; color: var(--primary); text-transform: uppercase; }
-    
-    input {
-        padding: 10px;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        outline: none;
-        font-size: 0.9rem;
-    }
-
+    input { padding: 10px; border: 1px solid var(--border); border-radius: 4px; outline: none; }
     input:focus { border-color: var(--primary); }
 
     .btn-primary {
@@ -100,59 +82,44 @@
         border-radius: 4px;
         cursor: pointer;
         font-weight: bold;
-        transition: 0.3s;
         width: 100%;
     }
 
-    .btn-primary:hover { filter: brightness(1.2); }
-
-    /* TABELA */
-    .table-container {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        min-width: 600px; 
-    }
-
-    th { background: #fafafa; color: #555; padding: 12px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
-    td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; text-align: center; }
-    
+    /* BOTÕES DE AÇÃO PRETO */
     .btn-action {
         border: none;
-        padding: 6px 10px;
+        padding: 6px 12px;
         border-radius: 4px;
         cursor: pointer;
         color: white;
         margin-left: 5px;
-        background: var(--primary);
+        background: var(--neutral-dark); /* PRETO */
+        font-weight: 600;
     }
+
+    /* BOTÃO CANCELAR/EDIÇÃO PRETO */
+    .btn-cancelar {
+        background: var(--neutral-dark); /* PRETO */
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    /* Tabela */
+    .table-container { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th { background: #fafafa; color: #555; padding: 12px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+    td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; text-align: center; }
 
     /* Modal */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .modal-content {
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 500px;
-    }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; }
 
     @media (max-width: 600px) {
         .container { margin: 15px auto; padding: 0 10px; }
-        .glass-panel { padding: 15px; }
     }
 </style>
 </head>
