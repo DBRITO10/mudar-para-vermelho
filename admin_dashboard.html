@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Performance - Simonetti</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+    /* PALETA MODERNA: VERMELHO, BRANCO E CINZA */
+    :root { 
+        --primary: #d32f2f;
+        --secondary: #f5f5f5;
+        --text-dark: #333333;
+        --text-light: #666666;
+        --accent: #d32f2f;
+        --success: #2e7d32;
+        --warning: #f57c00;
+        --danger: #c62828;
+        --white: #ffffff;
+        --border-color: #e0e0e0;
+    }
+
+    body { 
+        font-family: 'Segoe UI', Roboto, sans-serif; 
+        background-color: var(--secondary); 
+        margin: 0; 
+        padding-top: 80px; 
+        min-height: 100vh;
+        color: var(--text-dark);
+    }
+
+    /* NAVBAR */
+    .top-nav {
+        background: var(--white); 
+        padding: 0 20px; height: 65px;
+        display: flex; justify-content: space-between; align-items: center;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .btn-voltar { color: var(--primary); text-decoration: none; font-weight: 600; }
+    
+    .btn-sair { 
+        background: #feeceb; color: var(--danger); border: 1px solid #f8d7da;
+        padding: 8px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8rem; font-weight: bold;
+        transition: 0.3s;
+    }
+    .btn-sair:hover { background: var(--danger); color: white; }
+
+    .container { max-width: 1200px; margin: auto; padding: 0 20px 40px; }
+
+    /* FILTROS */
+    .filter-section {
+        background: var(--white);
+        padding: 20px; border-radius: 12px; margin-bottom: 25px;
+        display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label { font-size: 0.75rem; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+    .filter-group input { padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--secondary); }
+    
+    .btn-filter { 
+        background: var(--primary); color: white; border: none;
+        padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 42px;
+    }
+
+    /* CARDS RESUMO */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { 
+        background: var(--white); padding: 20px; border-radius: 12px; 
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+    }
+    .stat-card h3 { margin: 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); }
+    .stat-card .value { font-size: 1.8rem; font-weight: 800; margin: 10px 0; color: var(--text-dark); }
+
+    /* RANKING */
+    .ranking-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; }
+    .rank-card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); }
+    .rank-card h2 { margin-top: 0; font-size: 1rem; border-bottom: 2px solid var(--secondary); padding-bottom: 10px; color: var(--text-dark); }
+    
+    .rank-item { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding: 12px; border-bottom: 1px solid var(--secondary);
+        cursor: pointer; transition: 0.2s;
+    }
+    .rank-item:hover { background: var(--secondary); }
+    .rank-number { font-weight: 800; color: var(--primary); font-size: 1.1rem; min-width: 30px; }
+    .name { font-weight: 600; }
+    .sub-info { font-size: 0.75rem; color: var(--text-light); }
+    .rank-value { font-weight: 700; color: var(--success); }
+
+    /* MODAL */
+    .modal { 
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; 
+    }
+    .modal-content { 
+        background: var(--white); color: var(--text-dark); width: 90%; max-width: 800px; max-height: 85vh; 
+        border-radius: 12px; overflow-y: auto; padding: 25px; position: relative; border: 1px solid var(--border-color);
+    }
+    .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; }
+    
+    .pedido-mini-card { background: var(--secondary); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    .pedido-header { padding: 12px 15px; background: #eee; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+    th { text-align: left; background: var(--secondary); padding: 10px; border-bottom: 1px solid var(--border-color); }
+    td { padding: 10px; border-bottom: 1px solid var(--border-color); }
+
+    @media (max-width: 600px) {
+        .ranking-section { grid-template-columns: 1fr; }
+        .filter-section { flex-direction: column; align-items: stretch; }
+    }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="nav-left">
+        <a href="admin_painel.html" class="btn-voltar"><i class="fas fa-arrow-left"></i></a>
+        <i class="fas fa-chart-line" style="color: var(--warning);"></i>
+        <span>PERFORMANCE DE VENDAS (MÊS)</span>
+    </div>
+    <a href="#" id="btnSair" class="btn-sair">SAIR</a>
+</nav>
+
+<div class="container">
+    <div class="filter-section">
+        <div class="filter-group">
+            <label>Data Início</label>
+            <input type="date" id="dataInicio">
+        </div>
+        <div class="filter-group">
+            <label>Data Fim</label>
+            <input type="date" id="dataFim">
+        </div>
+        <button class="btn-filter" id="btnFiltrar">ATUALIZAR DASHBOARD</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Pedidos Concluídos</h3>
+            <div class="value" id="statPedidos">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-boxes"></i>
+            <h3>Peças Movimentadas</h3>
+            <div class="value" id="statPecas">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-dollar-sign"></i>
+            <h3>Volume Financeiro</h3>
+            <div class="value" id="statFinanceiro">R$ 0,00</div>
+        </div>
+    </div>
+
+    <div class="ranking-section">
+        <div class="rank-card">
+            <h2><i class="fas fa-medal"></i> Ranking de Unidades (Lojas)</h2>
+            <div id="rankLojas"></div>
+        </div>
+        <div class="rank-card">
+            <h2><i class="fas fa-trophy"></i> Ranking de Líderes (Gerentes)</h2>
+            <div id="rankLideres"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalPedidos">
+    <div class="modal-content">
+        <span class="close-modal" onclick="fecharModal()">&times;</span>
+        <h2 id="modalTitle" style="margin-top:0">Pedidos de: </h2>
+        <div id="listaPedidosModal"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { db, auth } from "./js/firebase-config.js";
+    import { collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // --- CONFIGURAÇÃO DE DATAS AUTOMÁTICAS ---
+    function setDatasPadrao() {
+        const agora = new Date();
+        // Primeiro dia do mês atual
+        const primeiroDia = new Date(agora.getFullYear(), agora.getMonth(), 1);
+        
+        // Formatação YYYY-MM-DD para o input date
+        const formatar = (d) => d.toISOString().split('T')[0];
+
+        document.getElementById("dataInicio").value = formatar(primeiroDia);
+        document.getElementById("dataFim").value = formatar(agora);
+    }
+
+    let todosPedidos = [];
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "index.html";
+        else {
+            setDatasPadrao();
+            processarDashboard();
+        }
+    });
+
+    async function processarDashboard() {
+        const dInicio = new Date(document.getElementById("dataInicio").value + "T00:00:00");
+        const dFim = new Date(document.getElementById("dataFim").value + "T23:59:59");
+
+        const q = query(
+            collection(db, "pedidos"), 
+            where("status", "==", "Concluído"),
+            orderBy("data", "desc")
+        );
+
+        const snap = await getDocs(q);
+        todosPedidos = [];
+        const rankingLojas = {};
+        const rankingLideres = {};
+        let totalFin = 0;
+        let totalPecas = 0;
+
+        snap.forEach(doc => {
+            const p = doc.data();
+            const dataPed = p.data.toDate();
+
+            if (dataPed >= dInicio && dataPed <= dFim) {
+                todosPedidos.push({ id: doc.id, ...p });
+                
+                let subtotalPedido = 0;
+                let pecasPedido = 0;
+                p.itens.forEach(i => {
+                    const q = parseInt(i.qtdPedida || 0);
+                    subtotalPedido += (q * parseFloat(i.valor || 0));
+                    pecasPedido += q;
+                });
+
+                totalFin += subtotalPedido;
+                totalPecas += pecasPedido;
+
+                // Agrupar Loja
+                if (!rankingLojas[p.loja]) rankingLojas[p.loja] = { total: 0, qtd: 0, pedidos: [] };
+                rankingLojas[p.loja].total += subtotalPedido;
+                rankingLojas[p.loja].qtd += pecasPedido;
+                rankingLojas[p.loja].pedidos.push({ id: doc.id, ...p, totalPedido: subtotalPedido });
+
+                // Agrupar Líder
+                if (!rankingLideres[p.gerente]) rankingLideres[p.gerente] = { total: 0, qtd: 0, loja: p.loja, pedidos: [] };
+                rankingLideres[p.gerente].total += subtotalPedido;
+                rankingLideres[p.gerente].qtd += pecasPedido;
+                rankingLideres[p.gerente].pedidos.push({ id: doc.id, ...p, totalPedido: subtotalPedido });
+            }
+        });
+
+        // Atualizar Stats
+        document.getElementById("statPedidos").innerText = todosPedidos.length;
+        document.getElementById("statPecas").innerText = totalPecas;
+        document.getElementById("statFinanceiro").innerText = totalFin.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        renderizarRank(rankingLojas, "rankLojas", "total");
+        renderizarRank(rankingLideres, "rankLideres", "total");
+    }
+
+    function renderizarRank(obj, containerId, criterio) {
+        const sortable = Object.entries(obj).sort((a, b) => b[1][criterio] - a[1][criterio]);
+        const html = sortable.map(([name, data], index) => `
+            <div class="rank-item" onclick="abrirDetalhes('${name}', '${containerId}')">
+                <div class="rank-info">
+                    <span class="rank-number">#${index + 1}</span>
+                    <div>
+                        <div class="name">${name}</div>
+                        <div class="sub-info">${data.pedidos.length} pedidos | ${data.qtd} peças</div>
+                    </div>
+                </div>
+                <div class="rank-value">R$ ${data.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+            </div>
+        `).join('');
+        document.getElementById(containerId).innerHTML = html || '<p style="padding:10px; color:#ccc">Sem dados no período.</p>';
+        
+        // Guardar referência para o modal
+        window[`dados_${containerId}`] = obj;
+    }
+
+    window.abrirDetalhes = (nome, containerId) => {
+        const dados = window[`dados_${containerId}`][nome];
+        document.getElementById("modalTitle").innerText = `Pedidos de: ${nome}`;
+        
+        const html = dados.pedidos.map(p => {
+            const itensHtml = p.itens.map(i => `
+                <tr>
+                    <td>${i.desc}<br><small>${i.fornecedor}</small></td>
+                    <td>${i.qtdPedida}</td>
+                    <td>R$ ${parseFloat(i.valor).toLocaleString('pt-BR')}</td>
+                    <td>R$ ${(i.qtdPedida * i.valor).toLocaleString('pt-BR')}</td>
+                </tr>
+            `).join('');
+
+            return `
+            <div class="pedido-mini-card">
+                <div class="pedido-header" onclick="togglePedido('${p.id}')">
+                    <span>ID: ...${p.id.slice(-5).toUpperCase()}</span>
+                    <span>${p.data.toDate().toLocaleDateString()}</span>
+                    <span>R$ ${p.totalPedido.toLocaleString('pt-BR')}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="pedido-detalhes" id="det_${p.id}">
+                    <p style="margin:0 0 10px 0; font-size:0.8rem"><b>Aprovado por:</b> ${p.adminResponsavel || '---'}</p>
+                    ${p.numTransferencia ? `<p><b>Nº Transferência:</b> <span style="color:#004a99; font-weight:bold">${p.numTransferencia}</span></p>` : '<p style="color:orange"><i>Aguardando...</i></p>'}
+                    <table>
+                        <thead><tr><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Sub</th></tr></thead>
+                        <tbody>${itensHtml}</tbody>
+                    </table>
+                </div>
+            </div>`;
+        }).join('');
+        
+        document.getElementById("listaPedidosModal").innerHTML = html;
+        document.getElementById("modalPedidos").style.display = "flex";
+    };
+
+    window.togglePedido = (id) => {
+        const el = document.getElementById("det_"+id);
+        el.style.display = el.style.display === "block" ? "none" : "block";
+    };
+
+    window.fecharModal = () => document.getElementById("modalPedidos").style.display = "none";
+    document.getElementById("btnFiltrar").onclick = processarDashboard;
+    document.getElementById("btnSair").onclick = () => signOut(auth).then(() => window.location.href = "index.html");
+</script>
+</body>
+</html>

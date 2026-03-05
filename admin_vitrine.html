@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Estoque - Simonetti</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+    /* PALETA MODERNA: VERMELHO, BRANCO E CINZA (DASHBOARD) */
+    :root { 
+        --primary: #d32f2f;      /* Vermelho Principal */
+        --secondary: #f5f5f5;    /* Fundo Cinza Claro */
+        --accent: #d32f2f;       /* Destaques */
+        --success: #2e7d32;      /* Verde sóbrio */
+        --excel: #1d6f42;        
+        --pdf: #c62828;          
+        --text-dark: #333333;
+        --text-light: #666666;
+        --white: #ffffff;
+        --border-color: #e0e0e0;
+        --glass-bg: rgba(255, 255, 255, 0.9); /* Branco quase sólido */
+    }
+
+    body { 
+        font-family: 'Segoe UI', Roboto, sans-serif; 
+        background-color: var(--secondary); 
+        margin: 0; 
+        padding-top: 80px; 
+        padding-bottom: 40px; 
+        color: var(--text-dark);
+        min-height: 100vh;
+    }
+
+    /* HEADER PADRONIZADO */
+    .top-nav {
+        background: var(--white); 
+        color: var(--text-dark); 
+        padding: 0 20px; 
+        height: 65px;
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        position: fixed; 
+        top: 0; left: 0; right: 0; 
+        z-index: 1000; 
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .nav-left { flex: 1; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; color: var(--text-light); }
+    .nav-center { flex: 2; text-align: center; font-weight: bold; letter-spacing: 0.5px; font-size: 1.1rem; color: var(--text-dark); }
+    .nav-right { flex: 1; text-align: right; }
+    
+    .btn-voltar { color: var(--primary); text-decoration: none; font-size: 1.2rem; transition: 0.3s; font-weight: bold; }
+    .btn-voltar:hover { opacity: 0.7; }
+    
+    .btn-sair { 
+        color: var(--primary); 
+        text-decoration: none; 
+        font-weight: bold; 
+        font-size: 0.8rem; 
+        background: #feeceb; 
+        padding: 6px 15px; 
+        border-radius: 20px; 
+        border: 1px solid #f8d7da;
+        transition: 0.3s;
+    }
+    .btn-sair:hover { background: var(--primary); color: white; }
+
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+    /* CARDS DE RESUMO (Clean Style) */
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .card-resumo { 
+        background: var(--white); 
+        padding: 20px; 
+        border-radius: 12px; 
+        border-left: 5px solid var(--primary); 
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03); 
+    }
+    .card-resumo small { color: var(--text-light); font-size: 0.7rem; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+    .card-resumo h2 { margin: 5px 0 0; color: var(--text-dark); font-size: 1.5rem; font-weight: 800; }
+
+    /* BUSCA E FILTROS */
+    .search-container {
+        background: var(--white);
+        padding: 20px; 
+        border-radius: 12px; 
+        margin-bottom: 25px;
+        border: 1px solid var(--border-color);
+        display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .search-box { flex: 2; min-width: 200px; }
+    .filter-box { flex: 1; min-width: 150px; }
+    
+    input, select { 
+        width: 100%; 
+        padding: 12px; 
+        border: 1px solid var(--border-color); 
+        border-radius: 8px; 
+        outline: none; 
+        background: var(--secondary);
+        color: var(--text-dark); 
+        font-weight: 500;
+        transition: 0.3s;
+    }
+    input:focus, select:focus { border-color: var(--primary); background: var(--white); }
+    
+    .btn-export { border: none; padding: 11px 18px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; transition: 0.2s; }
+    .btn-excel { background: var(--excel); }
+    .btn-pdf { background: var(--pdf); }
+    .btn-export:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+
+    /* GRID PRODUTOS */
+    .grid-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .card-produto { 
+        background: var(--white);
+        border-radius: 12px; 
+        padding: 20px; 
+        border: 1px solid var(--border-color);
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between; 
+        transition: 0.3s;
+        box-shadow: 0 3px 5px rgba(0,0,0,0.02);
+    }
+    .card-produto:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+    .badge-forn { color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; margin-bottom: 8px; display: block; }
+    
+    .container-valores { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .info-valor { 
+        padding: 10px; 
+        background: var(--secondary); 
+        border-radius: 8px;
+        color: var(--text-dark); 
+        font-weight: bold; 
+        font-size: 0.9rem; 
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+    /* Destaque para o valor total */
+    .info-total { 
+        background: #feeceb; 
+        border: 1px solid #f8d7da; 
+        color: var(--primary); 
+    }
+
+    @media (max-width: 600px) {
+        .nav-left span { display: none; }
+        .grid-produtos { grid-template-columns: 1fr; }
+        .nav-center { font-size: 0.9rem; }
+        .export-box { width: 100%; display: flex; gap: 10px; }
+        .btn-export { flex: 1; justify-content: center; }
+    }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="nav-left">
+        <a href="admin_painel.html" class="btn-voltar" title="Voltar ao Painel">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <i class="fas fa-user-circle" style="color: var(--accent);"></i>
+        <span><b><span id="navNome">...</span></b> | <small id="navUnidade">...</small></span>
+    </div>
+    <div class="nav-center">TRANSBORDO 600</div>
+    <div class="nav-right">
+        <a href="#" id="btnLogout" class="btn-sair">SAIR</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="summary-grid">
+        <div class="card-resumo">
+            <small>Total de Produtos</small>
+            <h2 id="totalVolumes">0</h2>
+        </div>
+        <div class="card-resumo" style="border-left-color: var(--success);">
+            <small>VALOR TOTAL EM ESTOQUE</small>
+            <h2 id="totalFinanceiro">R$ 0,00</h2>
+        </div>
+    </div>
+
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="inputBusca" placeholder="🔍 Buscar produto ou código..." onkeyup="filtrar()">
+        </div>
+        <div class="filter-box">
+            <select id="selectForn" onchange="filtrar()">
+                <option value="">Todos Fornecedores</option>
+            </select>
+        </div>
+        <div class="export-box">
+            <button class="btn-export btn-excel" onclick="exportarExcel()">
+                <i class="fas fa-file-excel"></i> EXCEL
+            </button>
+            <button class="btn-export btn-pdf" onclick="exportarPDF()">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+        </div>
+    </div>
+    
+    <div class="grid-produtos" id="vitrine"></div>
+</div>
+
+<script type="module">
+    import { db, auth } from "./js/firebase-config.js";
+    import { collection, onSnapshot, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // --- LÓGICA ORIGINAL PRESERVADA ---
+    let dadosUsuario = null;
+    let listaOriginal = [];
+    let listaFiltradaAtual = [];
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists()) {
+                dadosUsuario = userSnap.data();
+                document.getElementById("navNome").innerText = dadosUsuario.nomeCompleto.split(' ')[0];
+                document.getElementById("navUnidade").innerText = dadosUsuario.unidade;
+                carregarProdutos();
+            }
+        } else { window.location.href = "index.html"; }
+    });
+
+    function carregarProdutos() {
+        const q = query(collection(db, "produtos_transbordo"), where("qtd", ">", 0));
+        onSnapshot(q, (snapshot) => {
+            listaOriginal = [];
+            const fornSet = new Set();
+            snapshot.forEach(res => {
+                const p = { id: res.id, ...res.data() };
+                listaOriginal.push(p);
+                fornSet.add(p.fornecedor);
+            });
+
+            const selectForn = document.getElementById("selectForn");
+            const valorAtual = selectForn.value;
+            selectForn.innerHTML = '<option value="">Todos Fornecedores</option>';
+            Array.from(fornSet).sort().forEach(f => {
+                selectForn.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+            selectForn.value = valorAtual;
+            
+            filtrar();
+        });
+    }
+
+    window.filtrar = () => {
+        const txt = document.getElementById("inputBusca").value.toLowerCase();
+        const forn = document.getElementById("selectForn").value;
+        
+        listaFiltradaAtual = listaOriginal.filter(p => 
+            (p.desc.toLowerCase().includes(txt) || p.codigo.toLowerCase().includes(txt)) && 
+            (forn === "" || p.fornecedor === forn)
+        );
+
+        atualizarResumos(listaFiltradaAtual);
+        renderizar(listaFiltradaAtual);
+    };
+
+    function atualizarResumos(lista) {
+        let volumes = 0;
+        let financeiro = 0;
+        lista.forEach(p => {
+            const qtd = parseInt(p.qtd || 0);
+            const val = parseFloat(p.valor || 0);
+            volumes += qtd;
+            financeiro += (qtd * val);
+        });
+        document.getElementById("totalVolumes").innerText = volumes.toLocaleString('pt-BR');
+        document.getElementById("totalFinanceiro").innerText = financeiro.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderizar(lista) {
+        const vitrine = document.getElementById("vitrine");
+        if(lista.length === 0) {
+            vitrine.innerHTML = "<p style='text-align:center; grid-column: 1/-1; color:#ddd;'>Nenhum item encontrado.</p>";
+            return;
+        }
+
+        vitrine.innerHTML = lista.map(p => {
+            const unitario = parseFloat(p.valor || 0);
+            const totalItem = unitario * parseInt(p.qtd || 0);
+            
+            return `
+            <div class="card-produto">
+                <div>
+                    <span class="badge-forn">${p.fornecedor}</span>
+                    <h3 style="margin:5px 0; font-size:1rem; color:white;">${p.desc}</h3>
+                    <small style="color:#ddd;">CÓDIGO: ${p.codigo}</small>
+                    <p style="font-size:0.85rem; margin-top:10px;">Estoque Disponível: <b>${p.qtd} un</b></p>
+                </div>
+                <div class="container-valores">
+                    <div class="info-valor">
+                        <small style="font-size:0.6rem; display:block; text-transform:uppercase;">Unitário</small>
+                        R$ ${unitario.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    </div>
+                    <div class="info-valor info-total">
+                        <small style="font-size:0.6rem; display:block; text-transform:uppercase;">Total Item</small>
+                        R$ ${totalItem.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    window.exportarExcel = () => {
+        if(listaFiltradaAtual.length === 0) return alert("Não há dados para exportar.");
+        const dadosExcel = listaFiltradaAtual.map(p => ({
+            "FORNECEDOR": p.fornecedor,
+            "CÓDIGO": p.codigo,
+            "DESCRIÇÃO": p.desc,
+            "QTD": parseInt(p.qtd || 0),
+            "VALOR UNIT.": parseFloat(p.valor || 0),
+            "VALOR TOTAL": parseFloat(p.valor || 0) * parseInt(p.qtd || 0)
+        }));
+        const ws = XLSX.utils.json_to_sheet(dadosExcel);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+            const colUnit = XLSX.utils.encode_cell({r: R, c: 4});
+            const colTotal = XLSX.utils.encode_cell({r: R, c: 5});
+            if(ws[colUnit]) ws[colUnit].z = 'R$ #,##0.00';
+            if(ws[colTotal]) ws[colTotal].z = 'R$ #,##0.00';
+        }
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Estoque");
+        XLSX.writeFile(wb, `Estoque_600_${new Date().toLocaleDateString().replace(/\//g,'-')}.xlsx`);
+    };
+
+    window.exportarPDF = () => {
+        if(listaFiltradaAtual.length === 0) return alert("Não há dados para exportar.");
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const dataHj = new Date().toLocaleString();
+        doc.setTextColor(0, 74, 153); // Azul Simonetti no PDF
+        doc.setFontSize(26);
+        doc.setFont("helvetica", "bold");
+        doc.text("MS", 12, 18);
+        doc.setTextColor(40);
+        doc.setFontSize(16);
+        doc.text("Estoque 600 - Transbordo", 35, 14);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Relatório gerado em: ${dataHj}`, 35, 20);
+        const rows = [];
+        let totalGeral = 0;
+        listaFiltradaAtual.forEach(p => {
+            const total = parseFloat(p.valor || 0) * parseInt(p.qtd || 0);
+            totalGeral += total;
+            rows.push([p.fornecedor, p.codigo, p.desc, p.qtd, `R$ ${parseFloat(p.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]);
+        });
+        doc.autoTable({
+            startY: 28,
+            head: [['FORNECEDOR', 'CÓDIGO', 'DESCRIÇÃO', 'QTD', 'V. UNITÁRIO', 'V. TOTAL']],
+            body: rows,
+            theme: 'grid',
+            headStyles: { fillColor: [0, 74, 153], textColor: 255 },
+            styles: { fontSize: 8 },
+            foot: [[{content: 'VALOR TOTAL GERAL:', colSpan: 5, styles: {halign: 'right', fontStyle: 'bold'}}, {content: `R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, styles: {fontStyle: 'bold'}}]],
+            footStyles: { fillColor: [51, 51, 51], textColor: 255 }
+        });
+        doc.save(`Estoque_Transbordo.pdf`);
+    };
+
+    document.getElementById("btnLogout").onclick = () => confirm("Sair do sistema?") && signOut(auth).then(() => window.location.href = "index.html");
+</script>
+</body>
+</html>

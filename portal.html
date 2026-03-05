@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAINEL ADMINISTRATIVO</title>
+    
+    <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#002d5f">
+
+    <style>
+    /* PALETA MODERNA: VERMELHO, BRANCO E CINZA */
+    :root {
+        --primary: #d32f2f;      /* Vermelho principal */
+        --secondary: #f5f5f5;    /* Cinza muito claro para o fundo */
+        --accent: #d32f2f;       /* Vermelho para ícones e destaques */
+        --text-dark: #333333;    /* Cinza escuro para leitura fácil */
+        --white: #ffffff;
+        --border-color: #e0e0e0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--secondary); /* Fundo cinza claro */
+        color: var(--text-dark);            /* Texto escuro para não cansar a vista */
+        padding: 20px;
+    }
+
+    /* Barra Superior */
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 15px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--white);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .user-name {
+        font-size: 0.85rem;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .logout-btn {
+        background: #eee;
+        color: #d32f2f;
+        border: 1px solid #d32f2f;
+        padding: 6px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .logout-btn:hover { background: #d32f2f; color: white; }
+
+    .header-title { margin: 100px 0 40px; text-align: center; }
+    .header-title h1 { color: var(--text-dark); font-size: 1.6rem; }
+    .header-title span { color: var(--primary); }
+
+    /* Cards Limpos */
+    .container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        width: 100%;
+        max-width: 900px;
+    }
+
+    .card {
+        padding: 40px 20px;
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        text-align: center;
+        text-decoration: none;
+        color: var(--text-dark);
+        transition: 0.3s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .card .icon { font-size: 30px; margin-bottom: 15px; color: var(--primary); }
+    .card h2 { font-size: 1.2rem; }
+
+    /* Botão PWA */
+    #btnInstall {
+        display: none;
+        margin-top: 30px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .footer-credits { margin-top: 40px; color: #999; font-size: 0.75rem; }
+    .glow { display: none; } /* Removido para limpar o visual */
+
+    @media (max-width: 600px) { .container { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+    <nav class="top-bar">
+        <div class="user-name">
+            <i class="fas fa-user-circle"></i> 
+            <span id="displayName">Carregando...</span>
+        </div>
+        <button id="btnSair" class="logout-btn">Sair</button>
+    </nav>
+
+    <div class="glow"></div>
+
+    <div class="header-title">
+        <h1>Painel <span>Administrativo</span> </h1>
+        <p style="opacity: 0.8; margin-top: 8px; font-size: 0.9rem;">Escolha como deseja continuar:</p>
+    </div>
+
+    <div class="container">
+        <a href="admin_painel.html" class="card">
+            <span class="icon"><i class="fas fa-truck-moving"></i></span>
+            <h2>Transbordo</h2>
+            <p>Acessar Sistema</p>
+        </a>
+
+        <a href="pagina.html" class="card">
+            <span class="icon"><i class="fas fa-tools"></i></span>
+            <h2>Controle de Peças</h2>
+            <p>Acessar Sistema</p>
+        </a>
+    </div>
+
+    <button id="btnInstall">
+        <i class="fas fa-mobile-alt"></i> INSTALAR APLICATIVO
+    </button>
+
+    <footer class="footer-credits">
+        <p>&copy; 2026 Móveis Simonetti</p>
+        <p>Developed by DB &reg;</p>
+    </footer>
+
+    <script type="module">
+        /* O SCRIPT PERMANECE IGUAL PARA NÃO AFETAR O FUNCIONAMENTO */
+        import { auth, db } from "./js/firebase-config.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        document.getElementById("displayName").innerText = userDoc.data().nomeCompleto;
+                    } else {
+                        document.getElementById("displayName").innerText = user.email;
+                    }
+                } catch (e) {
+                    document.getElementById("displayName").innerText = "Usuário";
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        document.getElementById("btnSair").onclick = () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        };
+
+        let deferredPrompt;
+        const btnInstall = document.getElementById('btnInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstall.style.display = 'block';
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    btnInstall.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            btnInstall.style.display = 'none';
+            deferredPrompt = null;
+        });
+    </script>
+</body>
+</html>

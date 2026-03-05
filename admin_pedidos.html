@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM - Gestão de Pedidos Simonetti</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+    /* PALETA MODERNA: VERMELHO, BRANCO E CINZA */
+    :root { 
+        --primary: #d32f2f;
+        --secondary: #f5f5f5;
+        --text-dark: #333333;
+        --text-light: #666666;
+        --accent: #d32f2f;
+        --pendente: #f57c00;    /* Laranja sóbrio para pendente */
+        --concluido: #2e7d32;   /* Verde sóbrio para concluído */
+        --cancel: #c62828;
+        --white: #ffffff;
+        --border-color: #e0e0e0;
+    }
+
+    body { 
+        font-family: 'Segoe UI', Roboto, sans-serif; 
+        background-color: var(--secondary); 
+        margin: 0; 
+        padding-top: 80px; 
+        min-height: 100vh;
+        color: var(--text-dark);
+    }
+
+    /* BARRA SUPERIOR */
+    .top-nav { 
+        background: var(--white); 
+        padding: 0 20px; height: 65px; 
+        display: flex; justify-content: space-between; align-items: center; 
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000; 
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .btn-voltar { color: var(--primary); text-decoration: none; font-weight: 600; }
+    
+    .btn-sair { 
+        background: #feeceb; color: var(--cancel); text-decoration: none; 
+        padding: 6px 15px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; 
+        border: 1px solid #f8d7da; transition: 0.3s;
+    }
+    .btn-sair:hover { background: var(--cancel); color: white; }
+
+    .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+    
+    /* TÍTULO E BUSCA */
+    .titulo-pagina { 
+        text-align: center; color: var(--text-dark); 
+        background: var(--white); padding: 15px; 
+        font-size: 1.2rem; text-transform: uppercase; font-weight: 700; 
+        border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px;
+    }
+
+    .input-busca { 
+        width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); 
+        background: var(--white); font-size: 1rem; box-sizing: border-box; 
+    }
+
+    .filtro-data-container { 
+        background: var(--white); padding: 15px; border-radius: 8px; margin: 20px 0; 
+        display: flex; gap: 10px; align-items: center; flex-wrap: wrap; 
+        border: 1px solid var(--border-color);
+    }
+
+    /* CARDS DE PEDIDO */
+    .card-pedido { 
+        background: var(--white); border-radius: 8px; margin-bottom: 12px; 
+        border-left: 6px solid #ccc; border: 1px solid var(--border-color);
+        border-left-width: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .card-pendente { border-left-color: var(--pendente); }
+    .card-concluido { border-left-color: var(--concluido); }
+    
+    .card-header-click { padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .card-body-expansivel { display: none; padding: 0 20px 20px 20px; border-top: 1px solid var(--border-color); }
+    
+    .loja-nome { font-weight: 700; color: var(--text-dark); font-size: 1.1rem; }
+    .status-badge { 
+        padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; 
+        font-weight: bold; background: var(--secondary);
+    }
+
+    /* TABELA DE ITENS */
+    .itens-lista-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .itens-lista-table th { text-align: left; padding: 10px; background: var(--secondary); font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; }
+    .itens-lista-table td { padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    
+    .btn-remover-item { color: var(--cancel); border: none; background: none; cursor: pointer; }
+
+    /* BOTÕES AÇÃO */
+    .acao-admin { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn-confirmar { background: var(--concluido); color: white; border: none; padding: 12px; border-radius: 5px; flex: 2; font-weight: bold; }
+    .btn-cancelar-pedido { background: var(--cancel); color: white; border: none; padding: 12px; border-radius: 5px; flex: 1; font-weight: bold; }
+    .btn-pdf { background: var(--secondary); color: var(--text-dark); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; }
+
+    @media (max-width: 600px) { 
+        .acao-admin { flex-direction: column; } 
+        .btn-confirmar, .btn-cancelar-pedido, .btn-pdf { width: 100%; } 
+    }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="nav-esquerda">
+        <a href="admin_painel.html" class="btn-voltar"><i class="fas fa-arrow-left"></i></a>
+        <div class="nav-info">
+            <span><i class="fas fa-user-shield" style="color:var(--accent)"></i> ADM: <b id="nomeAdmin">...</b></span>
+            <small>Assistência MS</small>
+        </div>
+    </div>
+    <a href="#" id="btnLogout" class="btn-sair">SAIR <i class="fas fa-sign-out-alt"></i></a>
+</nav>
+
+<div class="container">
+    <h1 class="titulo-pagina">Gestão de Pedidos Simonetti</h1>
+    
+    <div class="busca-container">
+        <input type="text" id="campoBusca" class="input-busca" placeholder="🔍 Buscar Loja, Gerente ou Produto..." onkeyup="filtrarPedidos()">
+    </div>
+
+    <section>
+        <h2 style="color: var(--pendente);"><i class="fas fa-clock"></i> Pendentes</h2>
+        <div id="listaPendentes"></div>
+    </section>
+
+    <div class="filtro-data-container">
+        <span><strong>Filtrar Histórico:</strong></span>
+        <input type="date" id="dataInicio">
+        <span>até</span>
+        <input type="date" id="dataFim">
+        <button onclick="carregarPedidos()" class="btn-pdf" style="padding: 8px 15px; background: var(--primary); border:none;">Filtrar</button>
+    </div>
+
+    <section>
+        <h2 style="color: var(--concluido);"><i class="fas fa-check-double"></i> Concluídos</h2>
+        <div id="listaConcluidos"></div>
+    </section>
+</div>
+
+<script type="module">
+    import { db, auth } from "./js/firebase-config.js";
+    import { collection, onSnapshot, query, orderBy, doc, getDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // --- TODA A LÓGICA ORIGINAL PRESERVADA ---
+    let dadosAdmin = null;
+
+    function configurarDatasPadrao() {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById("dataInicio").value = hoje;
+        document.getElementById("dataFim").value = hoje;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const snap = await getDoc(doc(db, "users", user.uid));
+            if (snap.exists()) {
+                dadosAdmin = snap.data();
+                document.getElementById("nomeAdmin").innerText = dadosAdmin.nomeCompleto;
+            }
+            configurarDatasPadrao();
+            carregarPedidos();
+        } else { window.location.href = "index.html"; }
+    });
+
+    document.getElementById("btnLogout").onclick = () => confirm("Deseja sair?") && signOut(auth).then(() => window.location.href = "index.html");
+
+    window.carregarPedidos = function() {
+        const dInicio = new Date(document.getElementById("dataInicio").value + "T00:00:00");
+        const dFim = new Date(document.getElementById("dataFim").value + "T23:59:59");
+        const q = query(collection(db, "pedidos"), orderBy("data", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const pendentes = [];
+            const concluidos = [];
+            snapshot.forEach(res => {
+                const p = { id: res.id, ...res.data() };
+                const dataPedido = p.data?.toDate();
+                if(p.status === "Pendente") { pendentes.push(p); } 
+                else if (dataPedido >= dInicio && dataPedido <= dFim) { concluidos.push(p); }
+            });
+            renderizar(pendentes, "listaPendentes");
+            renderizar(concluidos, "listaConcluidos");
+        });
+    }
+
+    function renderizar(lista, containerId) {
+        const cont = document.getElementById(containerId);
+        cont.innerHTML = lista.length ? "" : '<p style="text-align:center; color:#ddd; padding:20px;">Nenhum pedido para este filtro.</p>';
+
+        lista.forEach(p => {
+            const isPendente = p.status === 'Pendente';
+            const textoProdutos = p.itens.map(i => i.desc).join(' ');
+            const html = `
+                <div class="card-pedido ${isPendente ? 'card-pendente' : 'card-concluido'}" id="card_${p.id}" data-busca="${p.loja.toLowerCase()} ${p.gerente.toLowerCase()} ${textoProdutos.toLowerCase()}">
+                    <div class="card-header-click" onclick="toggleCard('${p.id}')">
+                        <div>
+                            <div class="loja-nome">${p.loja}</div>
+                            <small>Solicitante: <b>${p.gerente}</b></small><br>
+                            <small>${p.data?.toDate().toLocaleString()}</small>
+                        </div>
+                        <span class="status-badge" style="background:${isPendente ? 'var(--pendente)' : 'var(--concluido)'}">${p.status}</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="card-body-expansivel" id="body_${p.id}">
+                        <div class="table-wrapper">
+                            <table class="itens-lista-table">
+                                <thead><tr><th>Cód</th><th>Produto</th><th>Qtd</th>${isPendente ? '<th>Ações</th>' : ''}</tr></thead>
+                                <tbody>
+                                    ${p.itens.map((i, index) => `
+                                        <tr>
+                                            <td>${i.codigo}</td>
+                                            <td>${i.desc}</td>
+                                            <td>
+                                                ${isPendente ? 
+                                                    `<input type="number" class="input-qtd-edit" value="${i.qtdPedida}" onchange="atualizarQtdLocal('${p.id}', ${index}, this.value)">` 
+                                                    : `x${i.qtdPedida}`}
+                                            </td>
+                                            ${isPendente ? `<td><button class="btn-remover-item" onclick="removerItemLocal('${p.id}', ${index})"><i class="fas fa-trash"></i></button></td>` : ''}
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="acao-admin">
+                            ${isPendente ? `
+                                <input type="text" id="num_${p.id}" class="input-transf" placeholder="Nº Transferência">
+                                <button class="btn-confirmar" onclick="finalizarPedido('${p.id}')">APROVAR</button>
+                                <button class="btn-cancelar-pedido" onclick="cancelarPedidoInteiro('${p.id}')">CANCELAR</button>
+                            ` : `
+                                <div style="flex:1; font-size:0.85rem;">Ref: <b>${p.numTransferencia}</b> | Por: ${p.adminResponsavel}</div>
+                                <button class="btn-pdf" onclick="gerarPDF('${p.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+                            `}
+                        </div>
+                    </div>
+                </div>`;
+            cont.innerHTML += html;
+        });
+    }
+
+    // --- FUNÇÕES DE INTERAÇÃO (SEM ALTERAÇÃO) ---
+    window.toggleCard = (id) => {
+        const body = document.getElementById(`body_${id}`);
+        const card = document.getElementById(`card_${id}`);
+        const aberto = body.style.display === "block";
+        body.style.display = aberto ? "none" : "block";
+        card.classList.toggle("card-aberto", !aberto);
+    };
+
+    window.filtrarPedidos = () => {
+        const termo = document.getElementById("campoBusca").value.toLowerCase();
+        document.querySelectorAll(".card-pedido").forEach(card => {
+            const info = card.getAttribute("data-busca");
+            card.style.display = info.includes(termo) ? "block" : "none";
+        });
+    };
+
+    window.atualizarQtdLocal = async (pedidoId, itemIndex, novaQtd) => {
+        try {
+            const snap = await getDoc(doc(db, "pedidos", pedidoId));
+            const p = snap.data();
+            const itens = [...p.itens];
+            const item = itens[itemIndex];
+            const diferenca = parseInt(novaQtd) - item.qtdPedida;
+            const prodRef = doc(db, "produtos_transbordo", item.idDoc);
+            const prodSnap = await getDoc(prodRef);
+            if(!prodSnap.exists()) return alert("Produto não encontrado na vitrine!");
+            const estoqueAtual = prodSnap.data().qtd;
+            if (diferenca > estoqueAtual) {
+                alert(`Estoque insuficiente! Disponível: ${estoqueAtual}`);
+                carregarPedidos();
+                return;
+            }
+            item.qtdPedida = parseInt(novaQtd);
+            await updateDoc(doc(db, "pedidos", pedidoId), { itens });
+            await updateDoc(prodRef, { qtd: estoqueAtual - diferenca });
+        } catch (e) { console.error(e); }
+    };
+
+    window.removerItemLocal = async (pedidoId, itemIndex) => {
+        if(!confirm("Remover item?")) return;
+        try {
+            const snap = await getDoc(doc(db, "pedidos", pedidoId));
+            const p = snap.data();
+            const item = p.itens[itemIndex];
+            const prodRef = doc(db, "produtos_transbordo", item.idDoc);
+            const prodSnap = await getDoc(prodRef);
+            if(prodSnap.exists()) await updateDoc(prodRef, { qtd: prodSnap.data().qtd + item.qtdPedida });
+            const novosItens = p.itens.filter((_, idx) => idx !== itemIndex);
+            novosItens.length === 0 ? await deleteDoc(doc(db, "pedidos", pedidoId)) : await updateDoc(doc(db, "pedidos", pedidoId), { itens: novosItens });
+        } catch (e) { console.error(e); }
+    };
+
+    window.cancelarPedidoInteiro = async (id) => {
+        if(!confirm("Cancelar pedido e devolver itens à vitrine?")) return;
+        try {
+            const snap = await getDoc(doc(db, "pedidos", id));
+            const p = snap.data();
+            const batch = writeBatch(db);
+            for(let item of p.itens) {
+                const ref = doc(db, "produtos_transbordo", item.idDoc);
+                const pSnap = await getDoc(ref);
+                if(pSnap.exists()) batch.update(ref, { qtd: pSnap.data().qtd + item.qtdPedida });
+            }
+            batch.delete(doc(db, "pedidos", id));
+            await batch.commit();
+        } catch (e) { console.error(e); }
+    };
+
+    window.finalizarPedido = async (id) => {
+        const num = document.getElementById(`num_${id}`).value;
+        if(!num) return alert("Insira o Nº da Transferência!");
+        await updateDoc(doc(db, "pedidos", id), {
+            status: "Concluído",
+            numTransferencia: num,
+            adminResponsavel: dadosAdmin.nomeCompleto,
+            dataConfirmacao: serverTimestamp()
+        });
+        alert("Aprovado!");
+    };
+
+    window.gerarPDF = async (id) => {
+        const snap = await getDoc(doc(db, "pedidos", id));
+        if (!snap.exists()) return;
+
+        const p = snap.data();
+        const { jsPDF } = window.jspdf;
+        const docPdf = new jsPDF();
+        const formatarMoeda = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        docPdf.setFontSize(35);
+        docPdf.setTextColor(227, 6, 19);
+        docPdf.setFont(undefined, 'bold');
+        docPdf.text("MS", 105, 20, { align: "center" });
+
+        docPdf.setFontSize(14);
+        docPdf.setTextColor(44, 62, 80);
+        docPdf.text("RELATÓRIO DE TRANSFERÊNCIA DE ESTOQUE", 105, 30, { align: "center" });
+
+        docPdf.setDrawColor(200, 200, 200);
+        docPdf.line(15, 35, 195, 35);
+
+        docPdf.setFontSize(10);
+        docPdf.setFont(undefined, 'bold');
+        docPdf.text(`Nº TRANSFERÊNCIA: ${p.numTransferencia || '---'}`, 15, 45);
+        docPdf.text(`UNIDADE: ${p.loja}`, 120, 45);
+
+        docPdf.setFont(undefined, 'normal');
+        docPdf.text(`Solicitado por (Líder): ${p.gerente}`, 15, 52);
+        docPdf.text(`Data Solicitação: ${p.data?.toDate().toLocaleString('pt-BR') || '---'}`, 15, 57);
+        docPdf.text(`Aprovado por (ADM): ${p.adminResponsavel || '---'}`, 120, 52);
+        docPdf.text(`Data Aprovação: ${p.dataConfirmacao?.toDate().toLocaleString('pt-BR') || '---'}`, 120, 57);
+
+        let totalFinanceiro = 0;
+        let totalItensFisicos = 0;
+
+        const linhas = p.itens.map(i => {
+            const qtd = parseInt(i.qtdPedida || 0);
+            const sub = qtd * parseFloat(i.valor || 0);
+            totalFinanceiro += sub;
+            totalItensFisicos += qtd;
+            return [i.fornecedor || '---', i.codigo, i.desc, qtd, formatarMoeda(i.valor), formatarMoeda(sub)];
+        });
+
+        docPdf.autoTable({
+            startY: 65,
+            head: [["FORNECEDOR", "CÓD", "DESCRIÇÃO", "QTD", "UNIT.", "TOTAL"]],
+            body: linhas,
+            headStyles: { fillColor: [227, 6, 19], halign: 'center' },
+            theme: 'striped'
+        });
+
+        const finalY = docPdf.lastAutoTable.finalY + 10;
+        docPdf.setFont(undefined, 'bold');
+        docPdf.text(`Total de Itens: ${totalItensFisicos}`, 125, finalY + 7);
+        docPdf.text(`VALOR TOTAL: ${formatarMoeda(totalFinanceiro)}`, 125, finalY + 15);
+
+        docPdf.save(`Transf_${p.numTransferencia || 'DOC'}_${p.loja}.pdf`);
+    };
+</script>
+</body>
+</html>

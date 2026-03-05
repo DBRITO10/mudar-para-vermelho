@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Giro - Móveis Simonetti</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+        --primary: #d32f2f;      /* Vermelho destaque */
+        --bg-body: #f5f5f5;     /* Fundo cinza claro */
+        --bg-card: #ffffff;     /* Fundo branco */
+        --text-dark: #333333;   /* Texto escuro */
+        --border: #e0e0e0;      /* Bordas sutis */
+        --success: #2e7d32;     /* Verde sóbrio para contraste */
+        --danger: #d32f2f;      /* Vermelho para alertas */
+        --warning: #ef6c00;     /* Laranja para atenção */
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: var(--bg-body);
+        min-height: 100vh;
+        color: var(--text-dark);
+    }
+
+    /* Top Bar */
+    .top-nav {
+        background: var(--bg-card);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 15px; }
+    .nav-left a { color: var(--primary); text-decoration: none; font-size: 1.2rem; }
+    .nav-left h1 { margin: 0; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dark); }
+
+    .nav-right { display: flex; align-items: center; gap: 20px; }
+    .user-badge {
+        background: #eee;
+        padding: 8px 15px;
+        border-radius: 20px;
+        display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+    }
+
+    .btn-nav {
+        border: none; padding: 8px 15px; border-radius: 5px;
+        background: var(--primary);
+        color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
+    }
+    .btn-nav:hover { filter: brightness(1.2); }
+
+    .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+    /* Painel limpo, sem blur */
+    .glass-panel {
+        background: var(--bg-card);
+        border-radius: 8px; 
+        padding: 25px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        margin-bottom: 25px;
+    }
+
+    .filter-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px; align-items: flex-end;
+    }
+
+    .filter-group { display: flex; flex-direction: column; gap: 8px; }
+    .filter-group label { font-size: 0.75rem; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+    .filter-group input, .filter-group select {
+        padding: 10px; border: 1px solid var(--border); border-radius: 4px; outline: none;
+    }
+
+    /* ROLAGEM LATERAL (Tabela) */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        min-width: 800px;
+    }
+
+    th { background: #fafafa; color: #555; padding: 15px 10px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+    td { padding: 15px 10px; border-bottom: 1px solid var(--border); font-size: 0.9rem; text-align: center; color: var(--text-dark); }
+
+    /* Estilo das cores */
+    .tipo-Entrada { color: var(--success); font-weight: bold; }
+    .tipo-Saída { color: var(--danger); font-weight: bold; }
+    .Tentativa-de-Exclusão-Bloqueada { color: var(--danger); font-weight: bold; }
+    .tipo-Transferência { color: var(--success); font-weight: bold; }
+    .tipo-Criação-de-SKU { color: var(--success); font-weight: bold; }
+    .tipo-Criação-Produto-Master { color: var(--success); font-weight: bold; }
+    .tipo-Exclusão-Produto-Master { color: var(--danger); font-weight: bold; }
+    .tipo-Exclusão-de-SKU { color: var(--danger); font-weight: bold; }
+    .tipo-Edição-Produto-Master { color: var(--warning); font-weight: bold; }
+    .tipo-Edição-de-SKU { color: var(--warning); font-weight: bold; }   
+
+    @media (max-width: 768px) {
+      .container { margin: 15px auto; padding: 0 10px; }
+      .user-badge span { display: none; }
+    }
+</style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-left">
+      <a href="pagina.html"><i class="fas fa-arrow-left"></i></a>
+      <h1>Histórico de Movimentações</h1>
+    </div>
+    
+    <div class="nav-right">
+        <div class="user-badge" id="labelUser"><i class="fas fa-user-circle"></i> Carregando...</div>
+        <button id="btnLogout" class="btn-nav" style="background: var(--danger);"><i class="fas fa-sign-out-alt"></i> SAIR</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="glass-panel">
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label>DATA:</label>
+          <input type="date" id="filtroData">
+        </div>
+        <div class="filter-group">
+          <label>AÇÃO:</label>
+          <select id="filtroTipo">
+            <option value="Todos">Todas as Ações</option>
+            <option value="Entrada">Entradas</option>
+            <option value="Saída">Saídas</option>
+            <option value="Tentativa de Exclusão Bloqueada">Tentativa de Exclusão Bloqueada</option>
+            <option value="Transferência">Transferência</option>
+            <option value="Criação de SKU">Criação de SKU</option>
+            <option value="Criação Produto Master">Criação Produto Master</option>
+            <option value="Exclusão Produto Master">Exclusão Produto Master</option>
+            <option value="Exclusão de SKU">Exclusão de SKU</option>
+            <option value="Edição Produto Master">Edição Produto Master</option>
+            <option value="Edição de SKU">Edição de SKU</option>
+          </select>
+        </div>
+        <button id="btnLimpar" class="btn-nav" style="background: var(--primary); height: 40px;">LIMPAR FILTROS</button>
+      </div>
+    </div>
+
+    <div class="glass-panel" style="padding: 0; overflow: hidden;">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>DATA / HORA</th>
+              <th>OPERADOR</th>
+              <th>PRODUTO / VOLUME</th>
+              <th>AÇÃO</th>
+              <th>QTD</th>
+              <th style="text-align: right; padding-right: 20px;">AÇÕES</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaHist"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/historico.js"></script>
+</body>
+</html>

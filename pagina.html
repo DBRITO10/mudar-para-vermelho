@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagina - Móveis Simonetti</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+    :root {
+        --primary: #d32f2f;      /* Vermelho destaque */
+        --bg-body: #f5f5f5;     /* Cinza claro */
+        --bg-card: #ffffff;     /* Branco */
+        --text-dark: #333333;   /* Texto legível */
+        --border: #e0e0e0;      /* Linhas sutis */
+        --gray-text: #777777;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: var(--bg-body);
+        min-height: 100vh;
+        color: var(--text-dark);
+        overflow-x: hidden;
+    }
+
+    /* Barra Superior */
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .logo-area { display: flex; align-items: center; gap: 15px; }
+
+    .btn-back-portal {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        transition: 0.3s;
+    }
+    .btn-back-portal:hover { opacity: 0.7; }
+
+    .logo-area i { font-size: 1.4rem; color: var(--primary); }
+    .logo-area h1 { margin: 0; font-size: 1rem; color: var(--text-dark); text-transform: uppercase; }
+
+    .user-controls { display: flex; align-items: center; gap: 10px; }
+
+    .user-badge {
+        background: #eee;
+        padding: 5px 12px;
+        border-radius: 20px;
+        color: var(--text-dark);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-logout {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    .welcome-section { text-align: center; margin: 40px auto 30px auto; }
+    .welcome-section h2 { font-size: 1.6rem; color: var(--text-dark); margin: 0; }
+    .welcome-section p { color: var(--gray-text); font-size: 1rem; margin-top: 5px; }
+
+    .main-container { max-width: 1100px; margin: 0 auto 50px auto; padding: 0 15px; }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 25px 15px;
+        text-align: center;
+        text-decoration: none;
+        color: var(--text-dark);
+        transition: 0.3s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .card:hover { border-color: var(--primary); transform: translateY(-3px); }
+
+    .card i { font-size: 2.2rem; margin-bottom: 12px; color: var(--primary); }
+    .card h3 { margin: 5px 0; font-size: 1.1rem; }
+    .card p { font-size: 0.8rem; color: var(--gray-text); height: 40px; margin: 5px 0; }
+
+    .card-action {
+        margin-top: 15px;
+        background: var(--primary);
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .card.locked { opacity: 0.5; cursor: not-allowed; }
+    .lock-icon { position: absolute; top: 10px; right: 10px; color: #999; }
+
+    .footer { text-align: center; padding: 20px; color: var(--gray-text); font-size: 0.75rem; }
+
+    /* Botão PWA */
+    #pwa-install-container { text-align: center; margin-top: 40px; }
+    #btnInstall {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo-area">
+            <a href="portal.html" class="btn-back-portal" title="Voltar ao Portal">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <i class="fas fa-warehouse"></i>
+            <h1>PAGINA INICIAL</h1>
+        </div>
+        
+        <div class="user-controls">
+            <div class="user-badge" id="userBadge">
+                <i class="fas fa-user-circle"></i>
+                <span id="userDisplay">...</span>
+            </div>
+            <button class="btn-logout" id="btnLogout" title="Sair do sistema">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="welcome-section">
+        <h2>PAINEL DE CONTROLE</h2>
+        <p>Selecione o módulo que deseja acessar.</p>
+    </div>
+
+    <main class="main-container">
+        <div class="cards-grid">
+            <a href="estoque.html" class="card" id="cardEstoque">
+                <i class="fas fa-boxes-stacked"></i>
+                <h3>ESTOQUE 600</h3>
+                <p>Visualização de endereços e volumes.</p>
+                <div class="card-action">Acessar</div>
+            </a>
+
+            <a href="produtos.html" class="card" id="cardProdutos">
+                <i class="fas fa-tags"></i>
+                <h3>CONTROLE</h3>
+                <p>Cadastro e criação de novos SKUs.</p>
+                <div class="card-action">Acessar</div>
+            </a>
+
+            <a href="fornecedores.html" class="card" id="cardFornecedores">
+                <i class="fas fa-truck-ramp-box"></i>
+                <h3>FORNECEDORES</h3>
+                <p>Gestão da base de fornecedores.</p>
+                <div class="card-action">Acessar</div>
+            </a>
+
+            <a href="historico.html" class="card" id="cardHistorico">
+                <i class="fas fa-history"></i>
+                <h3>HISTÓRICO</h3>
+                <p>Relatório de movimentações.</p>
+                <div class="card-action">Acessar</div>
+            </a>
+
+            <a href="usuarios.html" class="card" id="btnGestao" style="display: none;">
+                <i class="fas fa-users-gear"></i>
+                <h3>GESTÃO DA EQUIPE</h3>
+                <p>Níveis de acesso e permissões.</p>
+                <div class="card-action">Configurar</div>
+            </a>
+        </div>
+
+        <div id="pwa-install-container">
+            <button id="btnInstall">
+                <i class="fas fa-download"></i>
+                <span>INSTALAR APLICATIVO</span>
+            </button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; 2026 Móveis Simonetti - Developed by DB.
+    </footer>
+
+    <script type="module">
+        import { db, auth } from "./js/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        onAuthStateChanged(auth, async user => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (!userDoc.exists()) { window.location.href = "first_login.html"; return; }
+
+                    const userData = userDoc.data();
+                    const userRole = (userData.role || "leitor").toLowerCase();
+                    const nomeComp = userData.nomeCompleto || "Usuário";
+
+                    document.getElementById("userDisplay").innerText = nomeComp;
+
+                    if (userRole === "admin") {
+                        document.getElementById("btnGestao").style.display = "flex";
+                    }
+                } catch (e) { console.error(e); }
+            } else { window.location.href = "index.html"; }
+        });
+
+        document.getElementById("btnLogout").onclick = () => {
+            auth.signOut().then(() => { window.location.href = "index.html"; });
+        };
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtnContainer = document.getElementById('pwa-install-container');
+            if(installBtnContainer) installBtnContainer.style.display = 'block';
+        });
+
+        document.getElementById('btnInstall')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('pwa-install-container').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestão de Usuários - Simonetti</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+    /* PALETA MODERNA: VERMELHO, BRANCO E CINZA */
+    :root {
+        --primary: #d32f2f;      /* Vermelho destaque */
+        --bg-body: #f5f5f5;     /* Fundo bem claro */
+        --bg-card: #ffffff;     /* Fundo dos cartões */
+        --text-dark: #333333;   /* Texto legível */
+        --border: #e0e0e0;      /* Linhas finas */
+    }
+
+    body { 
+        font-family: 'Segoe UI', sans-serif; 
+        background-color: var(--bg-body); 
+        color: var(--text-dark); 
+        margin: 0; 
+        min-height: 100vh; 
+    }
+
+    .container { max-width: 900px; margin: 40px auto; padding: 20px; }
+
+    /* Cartão limpo sem efeito de vidro pesado */
+    .glass-card { 
+        background: var(--bg-card); 
+        border-radius: 12px; 
+        padding: 25px; 
+        border: 1px solid var(--border); 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+    }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { text-align: left; padding: 15px; border-bottom: 2px solid var(--border); font-size: 13px; color: #777; text-transform: uppercase; }
+    td { padding: 15px; border-bottom: 1px solid var(--border); color: var(--text-dark); }
+
+    /* Badges com cores mais suaves para leitura */
+    .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; }
+    .leitor { background: #9e9e9e; }
+    .operador { background: #fbc02d; color: #000; } /* Amarelo com texto preto */
+    .admin { background: var(--primary); }
+
+    .btn-group { display: flex; gap: 8px; justify-content: flex-end; }
+    .btn-action { border: none; color: white; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .btn-edit { background: #555; }
+    .btn-up { background: #2e7d32; } /* Verde mais sóbrio */
+    .btn-down { background: #ef6c00; } /* Laranja queimado */
+    .btn-action:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+    /* MODAL */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: white; color: var(--text-dark); padding: 30px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; }
+    .btn-confirm { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <a href="pagina.html" style="color:white; text-decoration: none; font-size: 14px;"><i class="fas fa-chevron-left"></i> VOLTAR</a>
+            <h2 style="margin:0; font-weight: 300; letter-spacing: 1px;">Gestão de Acessos</h2>
+            <button onclick="window.sairImediato()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size: 18px;">
+                <i class="fas fa-power-off"></i>
+            </button>
+        </div>
+
+        <div class="glass-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>COLABORADOR</th>
+                        <th>NÍVEL</th>
+                        <th style="text-align: right;">AJUSTES</th>
+                    </tr>
+                </thead>
+                <tbody id="listaUsuarios"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modalNome" class="modal">
+        <div class="modal-content">
+            <h3 style="margin:0; color: var(--primary);">Alterar Nome</h3>
+            <p id="subTitleModal" style="font-size: 12px; color: #666; margin-top: 5px;">Digite o novo nome de exibição</p>
+            <input type="text" id="inputNome">
+            <button class="btn-confirm" id="btnSalvarNome">ATUALIZAR NOME</button>
+            <button onclick="fecharModal()" style="background:none; border:none; margin-top:15px; color:#999; cursor:pointer; font-size: 13px;">Cancelar</button>
+        </div>
+    </div>
+
+<script type="module">
+        import { db, auth } from "./js/firebase-config.js";
+        import { collection, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        let adminUid = null;
+        let idEdit = null;
+
+        onAuthStateChanged(auth, async user => {
+            if (user) {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (snap.exists()) {
+                    const dadosLogado = snap.data();
+
+                    // TRAVA DE SEGURANÇA: Se o usuário logado tiver o campo 'unidade', ele é expulso da página
+                    if (dadosLogado.unidade && dadosLogado.unidade.trim() !== "") {
+                        alert("Acesso negado: Este painel é restrito à gestão central.");
+                        window.location.href = "pagina.html";
+                        return;
+                    }
+
+                    if (dadosLogado.role === "admin") {
+                        adminUid = user.uid; 
+                        carregarUsuarios();
+                    } else { 
+                        window.location.href = "pagina.html"; 
+                    }
+                }
+            } else { 
+                window.location.href = "index.html"; 
+            }
+        });
+
+        async function carregarUsuarios() {
+            const querySnapshot = await getDocs(collection(db, "users"));
+            const tabela = document.getElementById("listaUsuarios");
+            tabela.innerHTML = "";
+
+            querySnapshot.forEach((uDoc) => {
+                const d = uDoc.data();
+                
+                // FILTRO DE ENGENHARIA REVERSA:
+                // SÓ entra na lista quem NÃO tem o campo unidade preenchido
+                if (!d.unidade || d.unidade.trim() === "") {
+                    const id = uDoc.id;
+                    const role = d.role || "leitor";
+                    const isSelf = id === adminUid;
+                    const targetIsOtherAdmin = role === "admin" && !isSelf;
+
+                    let botoes = "";
+                    
+                    if (isSelf) {
+                        botoes = `<button class="btn-action btn-edit" onclick="window.modalNome('${id}','${d.nomeCompleto}')" title="Editar Meu Nome"><i class="fas fa-pen"></i></button>`;
+                    } 
+                    else if (!targetIsOtherAdmin) {
+                        botoes += `<button class="btn-action btn-edit" onclick="window.modalNome('${id}','${d.nomeCompleto}')" title="Editar Nome"><i class="fas fa-pen"></i></button>`;
+                        
+                        if (role === "leitor") {
+                            botoes += `<button class="btn-action btn-up" onclick="window.mudarCargo('${id}','operador')" title="Subir p/ Operador"><i class="fas fa-arrow-up"></i></button>`;
+                        }
+                        if (role === "operador") {
+                            botoes += `<button class="btn-action btn-down" onclick="window.mudarCargo('${id}','leitor')" title="Rebaixar p/ Leitor"><i class="fas fa-arrow-down"></i></button>`;
+                        }
+                        botoes += `<button class="btn-action btn-up" style="background:var(--danger)" onclick="window.mudarCargo('${id}','admin')" title="Tornar Admin"><i class="fas fa-user-shield"></i></button>`;
+                    }
+
+                    tabela.innerHTML += `
+                        <tr>
+                            <td>
+                                <strong>${d.nomeCompleto}</strong> ${isSelf ? '<span style="font-size:10px; opacity:0.5; margin-left:5px;">(VOCÊ)</span>' : ''}<br>
+                                <small style="opacity:0.5">${d.email}</small>
+                            </td>
+                            <td><span class="badge ${role}">${role}</span></td>
+                            <td>
+                                <div class="btn-group">
+                                    ${targetIsOtherAdmin ? '<i class="fas fa-lock" title="Admin Protegido" style="opacity:0.3"></i>' : botoes}
+                                </div>
+                            </td>
+                        </tr>`;
+                }
+            });
+        }
+
+        // Funções de Modal e Ações
+        window.modalNome = (id, nome) => { 
+            idEdit = id; 
+            document.getElementById("inputNome").value = nome; 
+            document.getElementById("modalNome").style.display = "flex"; 
+        };
+
+        window.fecharModal = () => { 
+            document.getElementById("modalNome").style.display = "none"; 
+        };
+        
+        document.getElementById("btnSalvarNome").onclick = async () => {
+            const n = document.getElementById("inputNome").value.trim();
+            if(n && idEdit) { 
+                try {
+                    await updateDoc(doc(db, "users", idEdit), { nomeCompleto: n }); 
+                    fecharModal(); 
+                    carregarUsuarios(); 
+                } catch (e) {
+                    alert("Erro ao atualizar nome.");
+                }
+            }
+        };
+
+        window.mudarCargo = async (uid, novo) => {
+            const acao = novo === 'leitor' ? "REBAIXAR" : "PROMOVER";
+            if(confirm(`Deseja ${acao} este usuário para ${novo.toUpperCase()}?`)) {
+                await updateDoc(doc(db, "users", uid), { role: novo });
+                carregarUsuarios();
+            }
+        };
+
+        window.sairImediato = () => signOut(auth).then(() => window.location.href = "index.html");
+    </script>
+</body>
+</html>
