@@ -127,7 +127,7 @@
 
     <nav class="top-nav">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <a href="pagina.html" style="color: white; text-decoration: none;"><i class="fas fa-arrow-left"></i></a>
+            <a href="pagina.html" style="color: var(--neutral-dark); text-decoration: none;"><i class="fas fa-arrow-left"></i></a>
             <span style="font-weight: bold; letter-spacing: 1px;">FORNECEDORES</span>
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
@@ -199,8 +199,9 @@
                 <input type="text" id="editTel">
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button onclick="fecharModal()" class="btn-action" style="background: #ccc; color: #333;">CANCELAR</button>
-                <button id="btnConfirmarEdit" class="btn-action" style="background: var(--primary);">SALVAR ALTERAÇÕES</button>
+                <button onclick="fecharModal()" class="btn-cancelar">CANCELAR</button>
+    
+               <button id="btnConfirmarEdit" class="btn-action">SALVAR ALTERAÇÕES</button>
             </div>
         </div>
     </div>
