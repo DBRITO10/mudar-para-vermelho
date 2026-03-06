@@ -350,7 +350,22 @@
         el.style.display = el.style.display === "block" ? "none" : "block";
     };
 
+    // 1. A função que faz o trabalho de fechar
     window.fecharModal = () => document.getElementById("modalPedidos").style.display = "none";
+
+    // 2. O observador que detecta o clique fora (clique no fundo escuro)
+    document.getElementById("modalPedidos").addEventListener("click", (event) => {
+        if (event.target.id === "modalPedidos") {
+            window.fecharModal();
+        }
+    });
+
+    // 3. Seus outros comandos
+    window.togglePedido = (id) => {
+        const el = document.getElementById("det_"+id);
+        el.style.display = el.style.display === "block" ? "none" : "block";
+    };
+    
     document.getElementById("btnFiltrar").onclick = processarDashboard;
     document.getElementById("btnSair").onclick = () => signOut(auth).then(() => window.location.href = "index.html");
 </script>
