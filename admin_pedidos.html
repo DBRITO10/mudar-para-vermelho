@@ -112,26 +112,24 @@
 </head>
 <body>
 
-<nav class="top-nav">
-    <div class="nav-esquerda" style="display: flex; align-items: center; gap: 10px;">
-        <i class="fas fa-box-open" style="color: var(--accent); font-size: 1.2rem;"></i>
-        <span style="font-weight: bold; font-size: 0.9rem;">GESTÃO DE PEDIDOS</span>
-    </div>
-
-    <div class="nav-direita" style="display: flex; align-items: center; gap: 15px;">
-        <div class="nav-info" style="text-align: right; line-height: 1.1;">
-            <div style="font-size: 0.8rem; font-weight: bold;">
-                <i class="fas fa-user-shield" style="color:var(--accent)"></i> <span id="nomeAdmin">...</span>
-            </div>
-            <small style="font-size: 0.65rem; color: var(--text-light);">Assistência MS</small>
-        </div>
-        
-        <a href="admin_painel.html" class="btn-voltar" style="font-size: 1.1rem;">
+<nav class="top-nav" style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+    
+    <div class="nav-esquerda">
+        <a href="admin_painel.html" class="btn-voltar" style="font-size: 1.2rem;">
             <i class="fas fa-arrow-left"></i>
         </a>
-        
-        <a href="#" id="btnLogout" class="btn-sair">SAIR</a>
     </div>
+
+    <div class="nav-centro" style="flex-grow: 1; text-align: center; font-size: 0.9rem;">
+        <span><i class="fas fa-user-shield" style="color:var(--accent)"></i> ADM: <b id="nomeAdmin">...</b></span>
+        <span style="margin: 0 10px; color: var(--text-light);">|</span>
+        <small>Assistência MS</small>
+    </div>
+
+    <div class="nav-direita">
+        <a href="#" id="btnLogout" class="btn-sair">SAIR <i class="fas fa-sign-out-alt"></i></a>
+    </div>
+
 </nav>
 
 <div class="container">
