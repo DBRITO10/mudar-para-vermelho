@@ -84,9 +84,45 @@
     .rank-item:hover { background: #fff5f5; border-left: 3px solid var(--primary); }
     .rank-number { font-weight: 800; color: var(--primary); margin-right: 15px; }
 
-    /* MODAL */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-    .modal-content { background: var(--white); width: 90%; max-width: 800px; max-height: 85vh; border-radius: 12px; overflow-y: auto; padding: 25px; position: relative; }
+    /* Ajuste para permitir clicar no fundo para fechar */
+    .modal { 
+        display: none; 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+        background: rgba(0,0,0,0.5); 
+        z-index: 2000; 
+        justify-content: center; 
+        align-items: center; 
+        cursor: pointer; /* Indica que o fundo é clicável */
+    }
+
+    .modal-content { 
+        background: var(--white); 
+        width: 90%; 
+        max-width: 800px; 
+        max-height: 85vh; 
+        border-radius: 12px; 
+        overflow-y: auto; 
+        padding: 25px; 
+        position: relative; 
+        cursor: default; /* Impede que o clique dentro do modal feche ele */
+    }
+
+    /* Botão de fechar ampliado */
+    .close-modal { 
+        position: absolute; 
+        top: 5px; 
+        right: 15px; 
+        font-size: 3rem; 
+        cursor: pointer; 
+        color: var(--danger);
+        padding: 10px;
+        line-height: 1;
+    }
+    .close-modal:hover { color: black; }
     
     /* DETALHES DO PEDIDO (CORRIGIDO PARA FICAR FECHADO) */
     .pedido-detalhes { display: none; padding: 10px; border-top: 1px solid var(--border-color); }
