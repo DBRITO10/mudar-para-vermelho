@@ -87,7 +87,7 @@ function renderizarTudo() {
                 ${userRole !== 'leitor' ? `
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <button onclick="window.abrirModalMover('${v.id}')" class="btn-mover">GUARDAR</button>
-                        <button onclick="window.abrirModalSaida('${v.id}')" class="btn-mover" style="background:var(--danger); color:white;">SAÍDA</button>
+                        <button onclick="window.abrirModalSaida('${v.id}')" class="btn-danger">SAÍDA</button>
                     </div>
                 ` : ''}
             </div>
