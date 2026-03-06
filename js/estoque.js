@@ -80,7 +80,7 @@ function renderizarTudo() {
         return `
             <div class="vol-item-pendente" style="background:#fff; padding:10px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--warning); display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border);">
                 <div style="flex:1">
-                    <small style="color:var(--warning); font-weight:bold;">${p.fornNome} | M: ${p.codigo}</small><br>
+                    <small style="color:black; font-weight:bold;">${p.fornNome} | M: ${p.codigo}</small><br>
                     <strong style="color:black; font-size:13px;">${p.nome}</strong><br>
                     <small style="color:#333;">SKU: ${v.codigo} | ${v.descricao} | <b style="color:var(--primary);">Qtd: ${v.quantidade}</b></small>
                 </div>
