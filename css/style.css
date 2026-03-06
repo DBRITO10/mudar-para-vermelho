@@ -88,6 +88,7 @@ button:hover {
 }
 
 #error {
+    display: none; /* Isso esconde o elemento inicialmente */
     background-color: #feeceb;
     color: #c62828;
     padding: 10px;
