@@ -71,8 +71,8 @@ function renderizarTudo() {
         const p = dbState.produtos[v.produtoId] || {};
         const condicao = v.quantidade > 0 && (!v.enderecoId || v.enderecoId === "");
         return condicao && (!fCod || p.codigo?.includes(fCod) || v.codigo?.includes(fCod)) &&
-                           (!fForn || p.fornId === fForn) &&
-                           (!fDesc || p.nome?.includes(fDesc) || v.descricao?.includes(fDesc));
+                          (!fForn || p.fornId === fForn) &&
+                          (!fDesc || p.nome?.includes(fDesc) || v.descricao?.includes(fDesc));
     });
     document.getElementById("countPendentes").innerText = pendentes.length;
     areaPendentes.innerHTML = pendentes.map(v => {
@@ -103,8 +103,8 @@ function renderizarTudo() {
             const p = dbState.produtos[v.produtoId] || {};
             const noLocal = v.enderecoId === end.id && v.quantidade > 0;
             return noLocal && (!fCod || p.codigo?.includes(fCod) || v.codigo?.includes(fCod)) &&
-                              (!fForn || p.fornId === fForn) &&
-                              (!fDesc || p.nome?.includes(fDesc) || v.descricao?.includes(fDesc));
+                            (!fForn || p.fornId === fForn) &&
+                            (!fDesc || p.nome?.includes(fDesc) || v.descricao?.includes(fDesc));
         });
 
         if (volsNoEndereco.length > 0 || (!fCod && !fForn && !fDesc)) {
@@ -113,8 +113,7 @@ function renderizarTudo() {
             const card = document.createElement('div');
             card.className = "card-endereco";
             
-            // FUNÇÃO DE CLIQUE PARA EXPANDIR
-            card.onclick = () => window.abrirDetalhesEndereco(end.id, volsNoEndereco);
+            card.onclick = () => window.abrirDetalhesEndereco(end.id);
 
             card.innerHTML = `
                 <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; padding: 10px;">
@@ -136,8 +135,9 @@ function renderizarTudo() {
     document.getElementById("countDisplay").innerText = totalVisiveis;
 }
 
-// NOVA FUNÇÃO PARA MOSTRAR OS DADOS DO SISTEMA AO CLICAR NO CARD
-window.abrirDetalhesEndereco = (endId, volumes) => {
+window.abrirDetalhesEndereco = (endId) => {
+    dbState.ultimoEnderecoAberto = { id: endId }; 
+    const volumes = dbState.volumes.filter(v => v.enderecoId === endId && v.quantidade > 0);
     const end = dbState.enderecos.find(e => e.id === endId);
     
     let htmlVols = volumes.map(v => {
@@ -151,8 +151,8 @@ window.abrirDetalhesEndereco = (endId, volumes) => {
                 </div>
                 ${userRole !== 'leitor' ? `
                     <div class="actions">
-                        <button onclick="window.fecharModal(); setTimeout(() => window.abrirModalMover('${v.id}'), 200)" title="Mover"><i class="fas fa-exchange-alt"></i></button>
-                        <button onclick="window.fecharModal(); setTimeout(() => window.abrirModalSaida('${v.id}'), 200)" style="color:var(--danger)" title="Saída"><i class="fas fa-sign-out-alt"></i></button>
+                        <button onclick="window.abrirModalMover('${v.id}')" title="Mover"><i class="fas fa-exchange-alt"></i></button>
+                        <button onclick="window.abrirModalSaida('${v.id}')" style="color:var(--danger)" title="Saída"><i class="fas fa-sign-out-alt"></i></button>
                     </div>
                 ` : ''}
             </div>`;
@@ -160,10 +160,11 @@ window.abrirDetalhesEndereco = (endId, volumes) => {
 
     openModalBase(`Endereço: RUA ${end.rua} - MOD ${end.modulo}`, `
         <div style="max-height: 400px; overflow-y: auto;">
-            ${htmlVols || '<div style="text-align:center; padding:15px; color:#999;">Vazio</div>'}
+            ${htmlVols.length > 0 ? htmlVols : '<div style="text-align:center; padding:15px; color:#999;">Vazio</div>'}
         </div>
     `, () => window.fecharModal());
     
+    document.querySelector("#modalMaster button[onclick='window.fecharModal()']").style.display = "none";
     document.querySelector("#modalMaster .btn-primary").innerText = "Fechar";
 };
 
@@ -179,7 +180,7 @@ window.abrirModalNovoEnd = () => {
         if(!rua || !mod) return alert("Preencha Rua e Módulo!");
         try {
             await addDoc(collection(db, "enderecos"), { rua: rua, modulo: mod });
-            window.fecharModal(); loadAll();
+            window.fecharModal();
         } catch(e) { alert("Erro ao salvar endereço"); }
     });
 };
@@ -237,7 +238,7 @@ window.confirmarMovimento = async () => {
             para: `RUA ${endDest.rua} MOD ${endDest.modulo}`
         });
 
-        window.fecharModal(); loadAll();
+        await window.fecharModal(); // Adicionado await aqui
     } catch(e) { alert("Erro ao mover"); }
 };
 
@@ -273,7 +274,7 @@ window.confirmarSaida = async () => {
                 tipo: "Saída", produto: vol.descricao, quantidade: qtd, usuario: usernameDB, data: serverTimestamp(),
                 de: vol.enderecoId ? "ESTOQUE" : "PENDENTE", para: "BAIXA"
             });
-            window.fecharModal(); loadAll();
+            await window.fecharModal(); // Adicionado await aqui
         } catch(e) { alert("Erro na saída"); }
     }
 };
@@ -292,7 +293,22 @@ function openModalBase(title, html, confirmAction) {
     document.getElementById("modalTitle").innerText = title;
     document.getElementById("modalBody").innerHTML = html;
     document.getElementById("modalMaster").style.display = "flex";
+    document.querySelector("#modalMaster button[onclick='window.fecharModal()']").style.display = "block"; 
     document.querySelector("#modalMaster .btn-primary").onclick = confirmAction;
 }
-window.fecharModal = () => document.getElementById("modalMaster").style.display = "none";
+
+window.fecharModal = async () => {
+    const modalTitle = document.getElementById("modalTitle").innerText;
+    document.getElementById("modalMaster").style.display = "none";
+    await loadAll();
+    
+    if ((modalTitle.includes("Movimentar") || modalTitle.includes("Saída")) && dbState.ultimoEnderecoAberto) {
+        setTimeout(() => {
+            window.abrirDetalhesEndereco(dbState.ultimoEnderecoAberto.id);
+        }, 100);
+    } else {
+        dbState.ultimoEnderecoAberto = null; 
+    }
+};
+
 window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
