@@ -366,18 +366,16 @@
         docPdf.setDrawColor(200, 200, 200);
         docPdf.line(15, 35, 195, 35);
 
-        // Informações
+        // Informações (Organizadas em coluna única à esquerda)
         docPdf.setFontSize(10);
         docPdf.setFont(undefined, 'bold');
-        docPdf.text(`Nº TRANSFERÊNCIA: ${p.numTransferencia || '---'}`, 15, 45);
-        docPdf.text(`UNIDADE: ${p.loja}`, 120, 45);
+        let startYInfo = 45;
+        docPdf.text(`Nº TRANSFERÊNCIA: ${p.numTransferencia || '---'}`, 15, startYInfo);
+        docPdf.text(`UNIDADE: ${p.loja}`, 15, startYInfo + 6);
         
         docPdf.setFont(undefined, 'normal');
-        docPdf.text(`Solicitado por: ${p.gerente}`, 15, 52);
-        docPdf.text(`Data da Solicitação: ${p.data?.toDate().toLocaleString('pt-BR') || '---'}`, 15, 57);
-        
-        docPdf.text(`Aprovado por: ${p.adminResponsavel || '---'}`, 120, 52);
-        docPdf.text(`Data da Confirmação: ${p.dataConfirmacao?.toDate().toLocaleString('pt-BR') || '---'}`, 120, 57);
+        docPdf.text(`Solicitado por: ${p.gerente} | Data: ${p.data?.toDate().toLocaleString('pt-BR') || '---'}`, 15, startYInfo + 14);
+        docPdf.text(`Aprovado por: ${p.adminResponsavel || '---'} | Data: ${p.dataConfirmacao?.toDate().toLocaleString('pt-BR') || '---'}`, 15, startYInfo + 20);
 
         // Tabela
         let totalFinanceiro = 0;
@@ -391,23 +389,24 @@
         });
 
         docPdf.autoTable({
-            startY: 70, // Ajustado ligeiramente para baixo para caber as novas datas
+            startY: startYInfo + 26, 
             head: [["FORNECEDOR", "CÓD", "DESCRIÇÃO", "QTD", "UNIT.", "TOTAL"]],
             body: linhas,
-            headStyles: { fillColor: [227, 6, 19] }
+            headStyles: { fillColor: [227, 6, 19] },
+            theme: 'grid' // Adiciona as linhas nas colunas e horizontais
         });
 
         // Rodapé do PDF
-        const finalY = docPdf.lastAutoTable.finalY + 10;
+        const finalY = docPdf.lastAutoTable.finalY + 8;
         docPdf.setFont(undefined, 'bold');
-        docPdf.text(`Total de Itens: ${totalItensFisicos}`, 150, finalY);
-        docPdf.text(`VALOR TOTAL: ${formatarMoeda(totalFinanceiro)}`, 150, finalY + 7);
+        docPdf.text(`Total de Itens: ${totalItensFisicos}`, 155, finalY);
+        docPdf.text(`VALOR TOTAL: ${formatarMoeda(totalFinanceiro)}`, 155, finalY + 7);
         
         docPdf.setFontSize(8);
         docPdf.setFont(undefined, 'italic');
-        docPdf.text(`Documento emitido em: ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}`, 15, 280);
-        docPdf.text("__________________________________________", 105, 270, { align: "center" });
-        docPdf.text("Assinatura Responsável", 105, 275, { align: "center" });
+        docPdf.text(`Documento emitido em: ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}`, 15, 285);
+        docPdf.text("__________________________________________", 105, 275, { align: "center" });
+        docPdf.text("Assinatura Responsável", 105, 280, { align: "center" });
 
         docPdf.save(`Transf_${p.numTransferencia || 'DOC'}_${p.loja}.pdf`);
     };
