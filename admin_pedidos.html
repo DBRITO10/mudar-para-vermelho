@@ -168,8 +168,11 @@
     let dadosAdmin = null;
 
     function configurarDatasPadrao() {
-        const hoje = new Date().toISOString().split('T')[0];
-        document.getElementById("dataInicio").value = hoje;
+        const agora = new Date();
+        const primeiroDia = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString().split('T')[0];
+        const hoje = agora.toISOString().split('T')[0];
+        
+        document.getElementById("dataInicio").value = primeiroDia;
         document.getElementById("dataFim").value = hoje;
     }
 
@@ -351,6 +354,7 @@
         const docPdf = new jsPDF();
         const formatarMoeda = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+        // Cabeçalho
         docPdf.setFontSize(35);
         docPdf.setTextColor(227, 6, 19);
         docPdf.setFont(undefined, 'bold');
@@ -359,24 +363,19 @@
         docPdf.setFontSize(14);
         docPdf.setTextColor(44, 62, 80);
         docPdf.text("RELATÓRIO DE TRANSFERÊNCIA DE ESTOQUE", 105, 30, { align: "center" });
-
         docPdf.setDrawColor(200, 200, 200);
         docPdf.line(15, 35, 195, 35);
 
+        // Informações
         docPdf.setFontSize(10);
-        docPdf.setFont(undefined, 'bold');
         docPdf.text(`Nº TRANSFERÊNCIA: ${p.numTransferencia || '---'}`, 15, 45);
         docPdf.text(`UNIDADE: ${p.loja}`, 120, 45);
+        docPdf.text(`Solicitado por: ${p.gerente}`, 15, 52);
+        docPdf.text(`Aprovado por: ${p.adminResponsavel || '---'}`, 120, 52);
 
-        docPdf.setFont(undefined, 'normal');
-        docPdf.text(`Solicitado por (Líder): ${p.gerente}`, 15, 52);
-        docPdf.text(`Data Solicitação: ${p.data?.toDate().toLocaleString('pt-BR') || '---'}`, 15, 57);
-        docPdf.text(`Aprovado por (ADM): ${p.adminResponsavel || '---'}`, 120, 52);
-        docPdf.text(`Data Aprovação: ${p.dataConfirmacao?.toDate().toLocaleString('pt-BR') || '---'}`, 120, 57);
-
+        // Tabela
         let totalFinanceiro = 0;
         let totalItensFisicos = 0;
-
         const linhas = p.itens.map(i => {
             const qtd = parseInt(i.qtdPedida || 0);
             const sub = qtd * parseFloat(i.valor || 0);
@@ -389,14 +388,20 @@
             startY: 65,
             head: [["FORNECEDOR", "CÓD", "DESCRIÇÃO", "QTD", "UNIT.", "TOTAL"]],
             body: linhas,
-            headStyles: { fillColor: [227, 6, 19], halign: 'center' },
-            theme: 'striped'
+            headStyles: { fillColor: [227, 6, 19] }
         });
 
+        // Rodapé do PDF
         const finalY = docPdf.lastAutoTable.finalY + 10;
         docPdf.setFont(undefined, 'bold');
-        docPdf.text(`Total de Itens: ${totalItensFisicos}`, 125, finalY + 7);
-        docPdf.text(`VALOR TOTAL: ${formatarMoeda(totalFinanceiro)}`, 125, finalY + 15);
+        docPdf.text(`Total de Itens: ${totalItensFisicos}`, 150, finalY);
+        docPdf.text(`VALOR TOTAL: ${formatarMoeda(totalFinanceiro)}`, 150, finalY + 7);
+        
+        docPdf.setFontSize(8);
+        docPdf.setFont(undefined, 'italic');
+        docPdf.text(`Documento emitido em: ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}`, 15, 280);
+        docPdf.text("__________________________________________", 105, 270, { align: "center" });
+        docPdf.text("Assinatura Responsável", 105, 275, { align: "center" });
 
         docPdf.save(`Transf_${p.numTransferencia || 'DOC'}_${p.loja}.pdf`);
     };
