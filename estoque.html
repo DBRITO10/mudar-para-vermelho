@@ -105,6 +105,10 @@
         transition: transform 0.2s; 
         border: 1px solid var(--border); 
         cursor: pointer;
+      
+        /* ADICIONE ESTAS LINHAS PARA GARANTIR O FORMATO QUADRADO/UNIFORME */
+        height: 250px;       /* Altura fixa para todos */
+        width: 100%;         /* Garante que ocupem toda a largura da coluna do grid */
     }
     .card-endereco:hover {
         transform: translateY(-3px); 
